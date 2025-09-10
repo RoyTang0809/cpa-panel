@@ -70,19 +70,29 @@ export default function App() {
     return makeBlocks(filled, 20)
   }, [state.hp, state.maxHp])
 
-  function gainExpHp({ exp = 0, hp = 0 }) {
-    setState(prev => {
-      let newExp = clamp(prev.exp + exp, 0, 100)
-      let level = prev.level
-      let hpVal = clamp(prev.hp + hp, 0, prev.maxHp)
+function gainExpHp({ exp = 0, hp = 0 }) {
+  setState(prev => {
+    let level = prev.level;
+    let expSum = prev.exp + exp;              // 新增 EXP 累計
+    let hpVal  = clamp(prev.hp + hp, 0, prev.maxHp);
 
-      if (prev.exp + exp >= 100) {
-        level = prev.level + 1
-        newExp = (prev.exp + exp) - 100
-      }
-      return { ...prev, level, exp: newExp, hp: hpVal }
-    })
-  }
+    // 允許一次加很多經驗，連續升級
+    while (expSum >= 100) {
+      level += 1;
+      expSum -= 100;                           // 每級固定 100
+    }
+    // 也處理被扣到負數（理論上不會用到，但保險）
+    while (expSum < 0 && level > 1) {
+      level -= 1;
+      expSum += 100;
+    }
+
+    // 確保落在 0..99
+    expSum = clamp(Math.round(expSum), 0, 99);
+
+    return { ...prev, level, exp: expSum, hp: hpVal };
+  });
+}
   function doStudyHour() { gainExpHp({ exp: 10, hp: -10 }) }
   function doMCQ(n = 1) {
     setState(prev => ({
