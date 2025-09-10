@@ -41,3 +41,5 @@ npm run dev
 ---
 
 祝使用順利！
+
+測試 GitHub Pages 部署
